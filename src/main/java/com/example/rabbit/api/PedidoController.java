@@ -29,13 +29,17 @@ public class PedidoController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.ACCEPTED)
+
+// Map ==> diccionario de clave valor. En este caso devolvemos un diccionario con el status, eventId y pedidoId (return)
+
     public Map<String, String> crear(@RequestBody CrearPedidoRequest request) {
         String pedidoId = (request.pedidoId() == null || request.pedidoId().isBlank())
+            // si no hay pedidoId en el request, generamos uno nuevo
                 ? UUID.randomUUID().toString()
+                // si hay pedidoId en el request, lo respetamos
                 : request.pedidoId();
 
-        // Si el cliente manda un eventId, lo respetamos. Asi puedes enviar DOS veces
-        // el mismo evento y comprobar que el consumidor solo lo procesa una (idempotencia).
+       
         String eventId = (request.eventId() == null || request.eventId().isBlank())
                 ? UUID.randomUUID().toString()
                 : request.eventId();
@@ -50,5 +54,12 @@ public class PedidoController {
         );
     }
 
+
+ //  clase que representa el cuerpo JSON que llega en el POST. Un record es una forma corta de declarar una clase inmutable que solo lleva datos. le dice a Java: "crea una clase con estos 4 campos". Y el compilador genera automáticamente por ti:
+
+// - un constructor con esos 4 parámetros,
+// - un getter por campo (se llaman eventId(), pedidoId(), cliente(), total() — sin get),
+// - equals(), hashCode() y toString(),
+// - los campos son final: una vez creado, no se modifica.
     public record CrearPedidoRequest(String eventId, String pedidoId, String cliente, BigDecimal total) {}
 }

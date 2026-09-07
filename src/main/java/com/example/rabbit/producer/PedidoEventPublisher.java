@@ -8,6 +8,30 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+/**
+ * PRODUCTOR. Unico punto de la app que publica el evento PedidoCreado en RabbitMQ.
+ *
+ * Su trabajo: recibir un objeto de dominio y entregarlo al broker, sin saber quien
+ * lo consumira ni esperar respuesta (mensajeria asincrona, productor y consumidor
+ * desacoplados).
+ *
+ * Relacion con RabbitMQ:
+ *   - Usa RabbitTemplate, el cliente de publicacion de Spring AMQP (configurado en
+ *     RabbitConfig con el converter JSON y el returns-callback).
+ *   - convertAndSend(exchange, routingKey, objeto, postProcessor):
+ *       1. el MessageConverter serializa el objeto Java a JSON en el cuerpo del mensaje;
+ *       2. el postProcessor (lambda) ajusta las properties AMQP del "sobre" antes de enviar;
+ *       3. se publica SIEMPRE a un EXCHANGE (nunca directo a una cola). El exchange, segun
+ *          la routing key "pedido.creado" y sus bindings, decide a que cola(s) va.
+ *   - Properties que fija el postProcessor:
+ *       * messageId = eventId  -> el id del evento viaja en el sobre; el consumidor lo usa
+ *                                 para deduplicar (idempotencia).
+ *       * contentType = application/json
+ *       * header x-event-type = "PedidoCreado" -> permite enrutar/filtrar por tipo de evento.
+ *       * deliveryMode = PERSISTENT -> el broker escribe el mensaje a disco; sobrevive a un
+ *                                      reinicio del broker (junto con la cola durable).
+ *
+ */
 @Component
 public class PedidoEventPublisher {
 
