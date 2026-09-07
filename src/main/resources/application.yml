@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: rabbit-messaging
+  rabbitmq:
+    host: localhost          # si algun dia corres esta app dentro de docker-compose, aqui iria "rabbitmq"
+    port: 5672
+    username: app
+    password: app
+    virtual-host: /
+    template:
+      mandatory: true
+    listener:
+      simple:
+        acknowledge-mode: auto
+        # Al agotar los reintentos, NO devolver el mensaje a la cola (romper el bucle infinito).
+        # En el Paso 5 este "rechazo" hara que el mensaje caiga en la DLQ.
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 4        # 1 intento inicial + 3 reintentos
+          initial-interval: 1s    # espera antes del 1er reintento
+          multiplier: 2           # cada espera x2: 1s, 2s, 4s
+          max-interval: 10s       # tope de espera entre reintentos
+  datasource:
+    url: jdbc:postgresql://localhost:5433/pedidos
+    username: app
+    password: app
+  jpa:
+    hibernate:
+      ddl-auto: update      # crea/actualiza la tabla processed_events al arrancar.
+                            # En produccion se usaria Flyway o Liquibase, no esto.
+    open-in-view: false
+
+app:
+  messaging:
+    exchange: pedidos.exchange
+    dlx: pedidos.dlx                     # exchange de "mensajes muertos"
+    queue:
+      pedido-creado: pedidos.creado.queue
+      pedido-creado-dlq: pedidos.creado.dlq
+    routing-key:
+      pedido-creado: pedido.creado
+      pedido-creado-dlq: pedido.creado.dlq
+
+logging:
+  level:
+    org.springframework.amqp: INFO

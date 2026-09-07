@@ -1,0 +1,32 @@
+# Maven
+target/
+build/
+
+# IDE - IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# IDE - Eclipse / STS
+.classpath
+.project
+.settings/
+bin/
+
+# IDE - VS Code
+.vscode/
+
+# Logs
+*.log
+logs/
+
+# Env local / secrets
+.env
+*.env
+application-local.yml
+application-local.properties
+
+# OS
+.DS_Store
+Thumbs.db
